@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/banner.svg" alt="Recall: AI memory that forgets on purpose" width="100%">
+  <img src="assets/banner.png" alt="Recall: AI memory that forgets on purpose" width="100%">
 </p>
 
 <p align="center">
@@ -968,4 +968,4 @@ PRs welcome. See [CONTRIBUTING.md](CONTRIBUTING.md). The tests are the best docu
 
 [MIT](LICENSE)
 
-<p align="center"><img src="assets/logo.svg" width="64" alt=""><br><sub>Remember what matters. Forget the rest. Ask when it changes.</sub></p>
+<p align="center"><img src="assets/logo.png" width="64" alt=""><br><sub>Remember what matters. Forget the rest. Ask when it changes.</sub></p>
