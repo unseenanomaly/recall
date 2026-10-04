@@ -59,7 +59,6 @@ Restart the tool afterwards so it unloads Recall.
 | **Hermes Agent** | `hermes plugins remove recall` |
 | **Pi** | `pi uninstall` with the package name `pi list` shows |
 | **Swival** | `swival skills delete --global <name>` for `recall` and each `recall-*` skill (`swival skills list` shows them); add `--library` to drop the staged copy |
-| **OpenCode** (npm package) | remove `recall-memory` from `plugin` / `plugins` in `opencode.json` |
 
 These remove the plugin itself. If you also used `recall install` for the same tool, run the
 matching `recall uninstall` below as well.

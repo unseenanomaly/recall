@@ -84,7 +84,7 @@ way other plugins need Node on your PATH.
 | **Hermes Agent** | `hermes plugins install unseenanomaly/recall --enable` |
 | **Pi** | `pi install git:github.com/unseenanomaly/recall` |
 | **Swival** | `swival skills add --global https://github.com/unseenanomaly/recall` |
-| **OpenCode** | `recall install opencode` (or `"plugin": ["recall-memory"]` in `opencode.json`) |
+| **OpenCode** | `recall install opencode` |
 | **Cursor** | `recall install cursor` |
 | **Gemini Code Assist** | `recall install gemini` |
 | **OpenClaw** | `recall install openclaw` |
@@ -404,11 +404,10 @@ Writes `~/.config/opencode/plugins/recall.js`, the `mcp.recall` entry in `openco
 `/recall-*` commands and the skill. If your config is `opencode.jsonc` with comments, Recall prints
 the snippet to paste instead of rewriting the file.
 
-**As a package** (once it's published to npm), add it to `opencode.json`. OpenCode 1 uses
-`{ "plugin": ["recall-memory"] }`; OpenCode 2 uses `{ "plugins": ["recall-memory"] }`. The plugin
-registers the MCP server and the `/recall-*` commands itself. **From a clone:** OpenCode 2 loads
-`.opencode/plugins/` when you open the repo; elsewhere point `plugins` at the absolute path of that
-folder (OpenCode 1: `"plugin": ["/path/to/recall/.opencode/plugins/recall.mjs"]`).
+**From a clone instead:** OpenCode 2 loads `.opencode/plugins/` when you open the repo; elsewhere
+point `plugins` in `opencode.json` at the absolute path of that folder (OpenCode 1:
+`"plugin": ["/path/to/recall/.opencode/plugins/recall.mjs"]`). The plugin registers the MCP server
+and the `/recall-*` commands itself.
 
 On OpenCode 2 the plugin adds memory and commands; the per-reply contradiction check uses OpenCode 1's
 event hooks, so on 2 ask for `/recall-check` or let the model call the `check` tool.

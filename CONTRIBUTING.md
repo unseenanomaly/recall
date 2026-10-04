@@ -51,23 +51,17 @@ python -m recall demo
 
 ## Releasing
 
-1. **Point the repo at your GitHub account** (once, or after renaming):
+1. **If you fork or rename the repository**, point everything at the new `owner/repo`:
 
    ```bash
    python scripts/set_repo.py your-name/recall
    ```
 
-   This fills in every `unseenanomaly/recall` placeholder (README, docs, `pyproject.toml`) and
-   regenerates the manifests, including the Codex marketplace, which needs the repo's git URL.
+   This updates the README, docs and `pyproject.toml`, and regenerates the manifests, including
+   the Codex marketplace, which needs the repo's git URL.
 2. **Bump the version** in `pyproject.toml` and `src/recall/__init__.py`, run `recall export-repo`
-   so every manifest carries it, run `pytest`, then tag the release (`git tag v0.2.0 && git push --tags`).
+   so every manifest carries it, run `pytest`, then tag the release (`git tag v0.2.1 && git push --tags`).
    Plugin hosts that pin by version (Claude Code, Codex, Gemini) offer the update to users from there.
-3. **Optional registries:**
-   - PyPI, so `pipx install recall-memory` works: `python -m build && twine upload dist/*`
-     (check the name is free on pypi.org first).
-   - npm, so OpenCode users can add `"recall-memory"`: `npm publish` (the `package.json` is ready;
-     rename it if the name is taken).
-   - ClawHub, for `clawhub install`: publish the folders under `skills/`.
 
 ## Good first issues
 
