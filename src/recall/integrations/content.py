@@ -92,7 +92,9 @@ command below has a CLI form.
 
 ## Commands
 
-The user may type `/recall <command> ...` (or `$recall ...`):
+Each command is also its own skill (`/recall-remember`, `$recall-remember`, or
+`/recall:recall-remember`, depending on the tool). The user may also just type
+`/recall <command> ...`:
 
 | Command | Do this | CLI fallback |
 |---|---|---|
@@ -130,4 +132,31 @@ answer, check, forget, settings). If the tools aren't available, use the `recall
 - Never store secrets.
 """
 
-__all__ = ["ARGS", "Command", "COMMANDS", "body", "SKILL", "INSTRUCTIONS", "INSTRUCTIONS_BLOCK"]
+#: How a command skill refers to the user's text. Claude Code substitutes $ARGUMENTS;
+#: elsewhere the words around it still tell the model what to use.
+SKILL_ARGS = "the text the user gave with this command ($ARGUMENTS)"
+
+
+def command_skill(cmd: Command) -> str:
+    """One command as a stand-alone skill, so it shows up as /recall-<verb> in skill-based tools."""
+    when = (f"Use only when the user explicitly invokes /recall-{cmd.name} (or $recall-{cmd.name}, "
+            f"/recall:recall-{cmd.name}).")
+    import json  # double-quoted JSON strings are valid YAML, whatever the text contains
+    lines = ["---", f"name: recall-{cmd.name}",
+             f"description: {json.dumps(f'{cmd.description} (Recall memory). {when}')}"]
+    if cmd.hint:
+        lines.append(f"argument-hint: {json.dumps(cmd.hint)}")
+    lines += ["disable-model-invocation: true", "---", "", body(cmd, SKILL_ARGS), ""]
+    return "\n".join(lines)
+
+
+def all_skills() -> "dict[str, str]":
+    """folder name -> SKILL.md: the main `recall` skill plus one per command."""
+    out = {"recall": SKILL}
+    for c in COMMANDS:
+        out[f"recall-{c.name}"] = command_skill(c)
+    return out
+
+
+__all__ = ["ARGS", "Command", "COMMANDS", "body", "SKILL", "INSTRUCTIONS", "INSTRUCTIONS_BLOCK",
+           "command_skill", "all_skills"]

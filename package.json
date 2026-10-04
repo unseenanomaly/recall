@@ -1,0 +1,50 @@
+{
+  "name": "recall-memory",
+  "version": "0.2.0",
+  "description": "Long-term memory that ages facts, asks before it overwrites what you said, and catches contradictions, including the AI's own.",
+  "keywords": [
+    "opencode-plugin",
+    "opencode",
+    "pi-package",
+    "pi",
+    "memory",
+    "ai-agents",
+    "contradiction-detection",
+    "mcp",
+    "hooks",
+    "skills"
+  ],
+  "license": "MIT",
+  "author": {
+    "name": "unseenanomaly",
+    "url": "https://github.com/unseenanomaly"
+  },
+  "homepage": "https://github.com/unseenanomaly/recall",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/unseenanomaly/recall.git"
+  },
+  "bugs": {
+    "url": "https://github.com/unseenanomaly/recall/issues"
+  },
+  "type": "module",
+  "main": "./.opencode/plugins/recall.mjs",
+  "exports": {
+    ".": "./.opencode/plugins/recall.mjs"
+  },
+  "files": [
+    ".opencode/plugins/",
+    "integrations/pi/",
+    "skills/",
+    "AGENTS.md",
+    "LICENSE"
+  ],
+  "pi": {
+    "extensions": [
+      "./integrations/pi/recall.ts"
+    ]
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "type": "command",
+        "bash": "recall hook session-start --agent copilot || exit 0",
+        "powershell": "if (Get-Command recall -ErrorAction SilentlyContinue) { recall hook session-start --agent copilot }",
+        "timeoutSec": 15
+      }
+    ],
+    "userPromptSubmitted": [
+      {
+        "type": "command",
+        "bash": "recall hook prompt --agent copilot || exit 0",
+        "powershell": "if (Get-Command recall -ErrorAction SilentlyContinue) { recall hook prompt --agent copilot }",
+        "timeoutSec": 15
+      }
+    ],
+    "agentStop": [
+      {
+        "type": "command",
+        "bash": "recall hook stop --agent copilot || exit 0",
+        "powershell": "if (Get-Command recall -ErrorAction SilentlyContinue) { recall hook stop --agent copilot }",
+        "timeoutSec": 15
+      }
+    ]
+  }
+}

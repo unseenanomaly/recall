@@ -357,8 +357,8 @@ def cmd_doctor(a: argparse.Namespace) -> int:
 
 def cmd_export(a: argparse.Namespace) -> int:
     from .integrations import export
-    files = export(a.dir)
-    print(f"wrote {len(files)} files under {a.dir}")
+    files = export(a.dir, a.repo)
+    print(f"wrote {len(files)} plugin/manifest files under {os.path.abspath(a.dir)}")
     return 0
 
 
@@ -484,8 +484,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("doctor", help="check the setup").set_defaults(fn=cmd_doctor)
 
-    s = sub.add_parser("export-integrations", help="write ready-to-copy integration files to a folder")
-    s.add_argument("dir")
+    s = sub.add_parser("export-repo", help="(maintainers) regenerate the plugin manifests in a Recall checkout")
+    s.add_argument("dir", nargs="?", default=".")
+    s.add_argument("--repo", help="OWNER/REPO on GitHub (default: [project.urls] Repository in pyproject.toml)")
     s.set_defaults(fn=cmd_export)
 
     s = sub.add_parser("forget-all", help="delete the whole memory file")

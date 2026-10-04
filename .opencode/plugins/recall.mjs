@@ -8,8 +8,39 @@
 
 import { execFile, execFileSync } from "node:child_process";
 
-const RECALL = __LAUNCHER__;
-const COMMANDS = __COMMANDS__;
+const RECALL = ["recall"];
+const COMMANDS = [
+  {
+    "name": "recall-remember",
+    "description": "Save something to long-term memory",
+    "template": "Save this to the user's long-term memory with Recall: $ARGUMENTS\n\n1. Call the `remember` tool of the `recall` MCP server with that text, in the user's words.\n   (No MCP tools available? Run `recall add \"<text>\" --json` in the shell.)\n2. If the result contains a question (\"You said before that ... Has that changed?\"), ask the\n   user exactly that question and wait for the reply. Then call `answer` with yes or no\n   (or run `recall answer yes` / `recall answer no`).\n3. Otherwise confirm in one short sentence what was saved, and mention anything it replaced.\nNever save passwords, API keys or tokens."
+  },
+  {
+    "name": "recall-search",
+    "description": "Ask what Recall remembers about something",
+    "template": "Look up what Recall remembers about: $ARGUMENTS\n\nCall the `search` tool of the `recall` MCP server (or run `recall ask \"<topic>\" --json`).\nAnswer from the results in a few lines, with their \"as of\" dates. Say if something is marked\ndisputed or faded, and say plainly if nothing is remembered."
+  },
+  {
+    "name": "recall-forget",
+    "description": "Forget something",
+    "template": "Forget this from the user's long-term memory: $ARGUMENTS\n\nCall the `forget` tool of the `recall` MCP server with that description or memory id\n(or run `recall forget \"<description or id>\"`). If several memories could match, list them\nand ask which one first. Then tell the user exactly which memory was forgotten."
+  },
+  {
+    "name": "recall-show",
+    "description": "Show everything Recall currently believes",
+    "template": "Show the user what Recall currently believes about them.\n\nCall the `context` tool of the `recall` MCP server with no query (or run `recall context`).\nPresent it as a short list, followed by any open questions and disputed items. Don't add\nanything that isn't in the result."
+  },
+  {
+    "name": "recall-auto",
+    "description": "Turn \"has that changed?\" questions off (auto-yes) or on",
+    "template": "Change how Recall handles the user changing something they told you before.\nArgument: $ARGUMENTS\n\n- on: auto-yes. Never ask \"has that changed?\"; the newest statement simply wins.\n- off: ask first (the default).\n- empty or status: just report the current setting.\n\nCall the `settings` tool of the `recall` MCP server with auto_confirm true (on) or false (off),\nor with no arguments for the status (or run `recall auto on`, `recall auto off`, `recall auto`).\nReport the resulting setting in one sentence."
+  },
+  {
+    "name": "recall-check",
+    "description": "Check your last reply for contradictions",
+    "template": "Check your previous reply for contradictions with what you said earlier and with what\nthe user told you.\n\nCall the `check` tool of the `recall` MCP server with the full text of your last reply\n(or run `recall check \"<text>\"`). If it reports conflicts, correct yourself explicitly\n(\"Correction: ...\") or tell the user which statement is right. If it's clean, say so in one line."
+  }
+];
 
 function run(args) {
   return new Promise((resolve) => {

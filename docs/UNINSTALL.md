@@ -1,4 +1,4 @@
-<p align="center"><img src="../assets/logo.svg" width="72" alt=""></p>
+<p align="center"><img src="../assets/logo.png" width="72" alt=""></p>
 
 <h1 align="center">Uninstalling Recall</h1>
 
@@ -21,13 +21,15 @@
 ## Quick version
 
 ```bash
-recall uninstall --all          # take Recall out of every AI tool (your memory is kept)
+recall uninstall --all          # undo every `recall install` (your memory is kept)
 recall forget-all --yes         # delete the memory file too
 pipx uninstall recall-memory    # remove the program (or: pip uninstall recall-memory)
 ```
 
-Not sure what's installed? `recall agents` lists every tool and its status. Add `--dry-run` to any
-`uninstall` to see what would be removed without touching anything.
+Installed a tool's plugin from GitHub instead? Remove it with that tool's own command
+([table below](#installed-from-github-the-tools-own-plugin-system)). Not sure what's installed?
+`recall agents` lists what `recall install` set up. Add `--dry-run` to any `recall uninstall` to see
+what would be removed without touching anything.
 
 > **How removal works.** Recall never replaces your config files. It adds one entry (an MCP server
 > named `recall`, hooks whose command contains `recall hook … --agent <tool>`, a fenced
@@ -42,6 +44,27 @@ Not sure what's installed? `recall agents` lists every tool and its status. Add 
 ## Per tool
 
 Restart the tool afterwards so it unloads Recall.
+
+### Installed from GitHub (the tool's own plugin system)
+
+| Tool | Remove with |
+|---|---|
+| **Claude Code** | `/plugin uninstall recall@recall`, then `/plugin marketplace remove recall` |
+| **OpenAI Codex** | `codex plugin remove recall` (and, if you like, remove the marketplace in `/plugins`) |
+| **GitHub Copilot CLI** | `copilot plugin uninstall recall`, then `copilot plugin marketplace remove recall` |
+| **Gemini CLI** | `gemini extensions uninstall recall` |
+| **Antigravity CLI** | `agy plugin uninstall recall` |
+| **Devin CLI** | `devin plugins remove recall` |
+| **Grok Build** | `grok plugin uninstall recall` (and drop `"recall"` from `[plugins] enabled` if you added it) |
+| **Hermes Agent** | `hermes plugins remove recall` |
+| **Pi** | `pi uninstall` with the package name `pi list` shows |
+| **Swival** | `swival skills delete --global <name>` for `recall` and each `recall-*` skill (`swival skills list` shows them); add `--library` to drop the staged copy |
+| **OpenCode** (npm package) | remove `recall-memory` from `plugin` / `plugins` in `opencode.json` |
+
+These remove the plugin itself. If you also used `recall install` for the same tool, run the
+matching `recall uninstall` below as well.
+
+### Installed with `recall install`
 
 | Tool | One command | What gets removed |
 |---|---|---|
@@ -68,13 +91,11 @@ Paths follow each tool's own override variables when set (`CLAUDE_CONFIG_DIR`, `
 
 | If you installed with… | Remove with… |
 |---|---|
-| Claude Code marketplace (`/plugin install recall@recall`) | `/plugin uninstall recall@recall`, then `/plugin marketplace remove recall` |
 | `claude mcp add … recall` | `claude mcp remove recall` (add `--scope user` if you used it) |
 | `codex mcp add recall …` | `codex mcp remove recall` |
-| `gemini extensions link …` / `install …` | `gemini extensions uninstall recall` |
+| `gemini extensions link …` | `gemini extensions uninstall recall` |
 | `gemini mcp add … recall` | `gemini mcp remove recall` |
 | `devin mcp add … recall` | `devin mcp remove recall` |
-| `agy plugin install …` | `agy plugin uninstall recall` |
 | `openclaw plugins install …` | `openclaw plugins uninstall recall` |
 | Copilot `/mcp add` | `/mcp` → remove `recall`, or delete it from `~/.copilot/mcp-config.json` |
 | `pi --extension …` (one session) | nothing to remove; just stop passing the flag |

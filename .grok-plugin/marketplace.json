@@ -1,5 +1,4 @@
 {
-  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "recall",
   "description": "Recall: AI memory that forgets on purpose.",
   "owner": {

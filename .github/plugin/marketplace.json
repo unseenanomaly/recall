@@ -1,5 +1,4 @@
 {
-  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "recall",
   "description": "Recall: AI memory that forgets on purpose.",
   "owner": {
@@ -11,7 +10,18 @@
       "name": "recall",
       "description": "Long-term memory that ages facts, asks before it overwrites what you said, and catches contradictions, including the AI's own.",
       "source": "./",
-      "category": "productivity"
+      "category": "productivity",
+      "tags": [
+        "memory",
+        "ai-agents",
+        "contradiction-detection",
+        "mcp",
+        "hooks",
+        "skills"
+      ],
+      "commands": "commands/",
+      "skills": "skills/",
+      "hooks": "hooks/copilot.json"
     }
   ]
 }

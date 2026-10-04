@@ -10,11 +10,11 @@ import json
 import os
 import shutil
 import time
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence
 
 from ..settings import recall_home
-from ._fs import Line, Tree, File
-from .agents import AGENTS, BY_ID, Agent, Ctx, claude_plugin_files, default_launcher, find, gemini_extension_files
+from ._fs import Line
+from .agents import AGENTS, Agent, Ctx, default_launcher, find
 
 __all__ = ["AGENTS", "Agent", "Ctx", "find", "install", "uninstall", "status", "detected", "export",
            "make_ctx"]
@@ -90,37 +90,7 @@ def detected(agent: Agent, ctx: Ctx) -> bool:
     return any(os.path.isdir(ctx.path(*d.split("/"))) for d in agent.marker_dirs)
 
 
-def export(target: str, launcher: Sequence[str] = ("recall",)) -> List[str]:
-    """Write ready-to-copy integration files (for manual installs and the plugin marketplace)."""
-    from .agents import plan_antigravity, plan_hermes, plan_openclaw, template
-    from .content import COMMANDS, SKILL, body
-    from .agents import markdown_commands
-    ctx = Ctx(home="/HOME", launcher=list(launcher), windows=False)
-    written: List[str] = []
-
-    def put(rel: str, text: str) -> None:
-        path = os.path.join(target, *rel.split("/"))
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, "w", encoding="utf-8", newline="\n") as f:
-            f.write(text)
-        written.append(rel)
-
-    for rel, text in claude_plugin_files(ctx).items():
-        put(f"claude-code/{rel}", text)
-    for rel, text in gemini_extension_files(ctx).items():
-        put(f"gemini-cli/{rel}", text)
-    for plan, name in ((plan_antigravity, "antigravity"), (plan_hermes, "hermes"), (plan_openclaw, "openclaw")):
-        for action in plan(ctx):
-            if isinstance(action, Tree) and action.root.replace("\\", "/").split("/")[-2] in ("plugins", "extensions"):
-                for rel, text in action.files.items():
-                    put(f"{name}/{rel}", text)
-    put("pi/recall.ts", template("pi.ts.tmpl", launcher))
-    put("opencode/plugins/recall.js", template("opencode.js.tmpl", launcher))
-    for rel, text in markdown_commands("$ARGUMENTS", "recall-", "").items():
-        put(f"opencode/commands/{rel}", text)
-    for rel, text in markdown_commands("the text the user typed after this command", "recall-", "").items():
-        put(f"cursor/commands/{rel}", text)
-    for c in COMMANDS:
-        put(f"swival/commands/recall-{c.name}.md", body(c, "$1") + "\n")
-    put("skills/recall/SKILL.md", SKILL)
-    return written
+def export(target: str, slug=None) -> List[str]:
+    """Write every file that makes the repo installable from GitHub (see ``repo.py``)."""
+    from .repo import export_repo
+    return export_repo(target, slug)

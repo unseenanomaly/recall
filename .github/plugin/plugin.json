@@ -1,0 +1,23 @@
+{
+  "name": "recall",
+  "version": "0.2.0",
+  "description": "Long-term memory that ages facts, asks before it overwrites what you said, and catches contradictions, including the AI's own.",
+  "author": {
+    "name": "unseenanomaly",
+    "url": "https://github.com/unseenanomaly"
+  },
+  "homepage": "https://github.com/unseenanomaly/recall",
+  "repository": "https://github.com/unseenanomaly/recall",
+  "license": "MIT",
+  "keywords": [
+    "memory",
+    "ai-agents",
+    "contradiction-detection",
+    "mcp",
+    "hooks",
+    "skills"
+  ],
+  "commands": "commands/",
+  "skills": "skills/",
+  "hooks": "hooks/copilot.json"
+}

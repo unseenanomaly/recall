@@ -15,7 +15,7 @@ _SRC = os.path.join(_HERE, "src")          # present when installed from the Rec
 
 
 def _launcher():
-    configured = __LAUNCHER__
+    configured = ["recall"]
     if shutil.which(configured[0]) or os.path.isabs(configured[0]):
         return configured, None
     if os.path.isdir(os.path.join(_SRC, "recall")):  # no `recall` on PATH: run the bundled source

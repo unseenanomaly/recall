@@ -5,7 +5,7 @@
 <p align="center">
   <a href="#install"><img alt="python" src="https://img.shields.io/badge/python-3.9%2B-8B5CF6?style=flat-square&logo=python&logoColor=white"></a>
   <img alt="dependencies" src="https://img.shields.io/badge/dependencies-zero-22D3EE?style=flat-square">
-  <img alt="tests" src="https://img.shields.io/badge/tests-102%20passing-22C55E?style=flat-square">
+  <a href="https://github.com/unseenanomaly/recall/actions/workflows/ci.yml"><img alt="tests" src="https://github.com/unseenanomaly/recall/actions/workflows/ci.yml/badge.svg"></a>
   <a href="#use-it-in-your-ai-tools"><img alt="agents" src="https://img.shields.io/badge/works%20in-14%20AI%20agents-F472B6?style=flat-square"></a>
   <img alt="mcp" src="https://img.shields.io/badge/MCP-server-0EA5E9?style=flat-square">
   <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-MIT-A78BFA?style=flat-square"></a>
@@ -58,16 +58,41 @@ when someone contradicts what they told us before, we *ask*. Recall gives your a
 
 ## Install
 
+Two steps: put the `recall` command on your machine, then add it to your tools.
+
+**1. The `recall` command** (Python 3.9+, zero dependencies)
+
 ```bash
-pipx install git+https://github.com/unseenanomaly/recall    # or: pip install git+https://github.com/unseenanomaly/recall
-recall install --detected                         # connect every AI tool found on this machine
+pipx install git+https://github.com/unseenanomaly/recall
 ```
 
-That's it. Restart your agents. `recall agents` shows what's connected, `recall doctor` checks the
-setup, and [`recall uninstall --all`](docs/UNINSTALL.md) removes every trace.
+`uv tool install git+https://github.com/unseenanomaly/recall` works too. Run `pipx ensurepath` once so
+desktop apps (Claude, Cursor, Codex…) can find it. Every plugin below calls this command, the same
+way other plugins need Node on your PATH.
 
-Want only one tool? `recall install claude-code` (or `codex`, `cursor`, … see [the list](#use-it-in-your-ai-tools)).
-Prefer to see what will change first? Add `--dry-run`.
+**2. Your tools.** Each one installs straight from this repo with its own plugin system:
+
+| Tool | Install |
+|---|---|
+| **Claude Code** | `/plugin marketplace add unseenanomaly/recall` then `/plugin install recall@recall` |
+| **OpenAI Codex** | `codex plugin marketplace add unseenanomaly/recall` then `codex plugin add recall@recall` |
+| **GitHub Copilot CLI** | `copilot plugin marketplace add unseenanomaly/recall` then `copilot plugin install recall@recall` |
+| **Gemini CLI** | `gemini extensions install https://github.com/unseenanomaly/recall` |
+| **Antigravity CLI** | `agy plugin install https://github.com/unseenanomaly/recall` |
+| **Devin CLI** | `devin plugins install unseenanomaly/recall` |
+| **Grok Build** | `grok plugin install unseenanomaly/recall --trust` |
+| **Hermes Agent** | `hermes plugins install unseenanomaly/recall --enable` |
+| **Pi** | `pi install git:github.com/unseenanomaly/recall` |
+| **Swival** | `swival skills add --global https://github.com/unseenanomaly/recall` |
+| **OpenCode** | `recall install opencode` (or `"plugin": ["recall-memory"]` in `opencode.json`) |
+| **Cursor** | `recall install cursor` |
+| **Gemini Code Assist** | `recall install gemini` |
+| **OpenClaw** | `recall install openclaw` |
+
+**Or all at once:** `recall install --detected` connects every tool it finds on this machine,
+writing the same pieces directly into each tool's config. It's also how you get automatic hooks
+in Gemini CLI and Devin, whose plugin installers don't carry them. `recall agents` shows what's
+connected, `recall doctor` checks the setup, and [`recall uninstall`](docs/UNINSTALL.md) takes it all out again.
 
 <details>
 <summary><b>From a clone / for development</b></summary>
@@ -75,7 +100,7 @@ Prefer to see what will change first? Add `--dry-run`.
 ```bash
 git clone https://github.com/unseenanomaly/recall && cd recall
 pip install -e ".[dev]"      # zero runtime dependencies; pytest for development
-pytest                       # 102 tests
+pytest
 recall demo
 ```
 </details>
@@ -126,251 +151,203 @@ and Berlin is still at 86% because it kept being *used*. Full output: [`docs/dem
 
 ## Use it in your AI tools
 
-One command per tool. Every install is **reversible** (`recall uninstall <tool>` removes exactly what
-was added, nothing else) and **non-destructive**: Recall merges into your existing config files,
-backs each one up once as `<file>.recall-backup`, and refuses to rewrite files that contain comments
-(it prints the snippet to paste instead).
-
-| Tool | Install | MCP tools | Hooks (automatic) | Slash commands | Skill |
-|---|---|:-:|:-:|---|:-:|
-| **Claude Code** | `recall install claude-code` | ✅ | ✅ start · prompt · stop | `/recall:remember` … | — |
-| **OpenAI Codex CLI** | `recall install codex` | ✅ | ✅ start · prompt · stop | `$recall remember` … | ✅ |
-| **Gemini CLI** | `recall install gemini-cli` | ✅ | ✅ start · prompt · stop | `/recall:remember` … | — |
-| **Gemini Code Assist** (IDE agent) | `recall install gemini` | ✅ | — | ask in chat | — |
-| **Cursor** (IDE + `cursor-agent`) | `recall install cursor` | ✅ | ✅ start · prompt · reply · stop | `/recall-remember` … | ✅ |
-| **GitHub Copilot CLI** | `recall install copilot` | ✅ | ✅ start · prompt · stop | ask in chat | ✅ |
-| **Pi** | `recall install pi` | — | ✅ every turn (extension) | `/recall-remember` … | — |
-| **OpenCode** | `recall install opencode` | ✅ | ✅ every turn (plugin) | `/recall-remember` … | ✅ |
-| **Antigravity CLI** (`agy`) | `recall install antigravity` | ✅ | ✅ stop | `/recall remember` … | ✅ |
-| **Hermes Agent** | `recall install hermes` | optional | ✅ every turn (plugin) | `/recall-remember` … | ✅ |
-| **Swival** | `recall install swival` | ✅ | — | `!recall-remember` … | ✅ |
-| **OpenClaw** | `recall install openclaw` | ✅ | ✅ every turn (plugin) | `/recall remember` … | ✅ |
-| **Devin CLI** | `recall install devin` | ✅ | ✅ start · prompt · stop | `/recall remember` … | ✅ |
-| **Grok Build** | `recall install grok` | ✅ | ✅ start · prompt · stop | `/recall remember` … | ✅ |
+| Tool | MCP tools | Automatic hooks | Commands |
+|---|:-:|:-:|---|
+| **Claude Code** | ✅ | ✅ start · prompt · stop | `/recall:recall-remember` … |
+| **OpenAI Codex** (CLI + app) | ✅ | ✅ start · prompt · stop | `$recall-remember` … |
+| **GitHub Copilot CLI** | ✅ | ✅ start · prompt · stop | `/recall:recall-remember` … |
+| **Gemini CLI** | ✅ | ✅ with `recall install gemini-cli` | `/recall-remember` … |
+| **Antigravity CLI** | ✅ | ✅ stop, with `recall install antigravity` | `/recall-remember` … |
+| **Devin CLI** | ✅ | ✅ with `recall install devin` | `/recall:recall-remember` … |
+| **Grok Build** | ✅ | ✅ start · prompt · stop | `/recall-remember` … |
+| **Hermes Agent** | optional | ✅ every turn (plugin) | `/recall-remember` … |
+| **Pi** | — | ✅ every turn (extension) | `/recall-remember` … |
+| **Swival** | ✅ with `recall install swival` | — | `$recall-remember` … |
+| **OpenCode** | ✅ | ✅ every turn (plugin) | `/recall-remember` … |
+| **Cursor** (IDE + `cursor-agent`) | ✅ | ✅ start · prompt · reply · stop | `/recall-remember` … |
+| **Gemini Code Assist** (IDE agent) | ✅ | — | ask in chat |
+| **OpenClaw** | ✅ | ✅ every turn (plugin) | `/recall-remember` … |
 
 **What the pieces do**
 
 - **MCP tools** (`remember`, `search`, `context`, `answer`, `check`, `forget`, `explain`, `settings`) let the
-  model read and write memory itself. The server is built in: `recall mcp`, no dependencies.
+  model read and write memory itself. The server is built in (`recall mcp`), no dependencies.
 - **Hooks** make it automatic. At session start the agent is told what Recall believes about you; when
   you send a prompt, personal facts in it are remembered, a pending *"has that changed?"* question
   is put to you, and a plain "yes"/"no" reply is recorded; when the agent finishes, its reply is
   checked for contradictions and, if it contradicted itself or you, it's asked to fix that.
-- **Slash commands** let *you* drive it: remember, search, forget, show, auto-yes on/off, check.
-- **The skill** (`SKILL.md`) teaches skill-based agents when and how to use Recall. In most of
-  them it doubles as the `/recall` command.
+- **Commands** let *you* drive it: remember, search, forget, show, auto-yes on/off, check. In most
+  tools they're skills, so the same files work everywhere.
+- **The `recall` skill** teaches the model when and how to use Recall, even without hooks.
 
-> Every tool shares one memory file, `~/.recall/memory.json`. Run `recall init` inside a project to
-> give that project its own memory instead (see [Where your data lives](#where-your-data-lives)).
+> Every tool shares one memory file, `~/.recall/memory.json`, so something you tell Claude Code is
+> known to Codex tomorrow. Run `recall init` inside a project to give that project its own memory
+> instead (see [Where your data lives](#where-your-data-lives)).
 
 ### Per-tool setup
 
-Each section shows the one-line install, exactly what it writes, how to do it by hand, and how to
-check it worked. Paths are for macOS/Linux; on Windows `~` is `%USERPROFILE%`.
+Each tool has two routes. **From GitHub** uses the tool's own plugin system: you get updates
+through it and remove it with its own uninstall command. **`recall install <tool>`** writes the same
+pieces straight into the tool's config (merging into existing files, backing each one up once as
+`<file>.recall-backup`, refusing to rewrite files that contain comments). It also fills the gaps
+where a tool's plugin format can't carry hooks. Paths are for macOS/Linux; on Windows `~` is
+`%USERPROFILE%`.
 
 <details>
-<summary><b>Claude Code</b>: plugin with MCP, hooks and <code>/recall:*</code> commands</summary>
+<summary><b>Claude Code</b>: MCP, hooks and <code>/recall:recall-*</code> skills</summary>
 
-```bash
-recall install claude-code
-```
-
-Writes a plugin to `~/.claude/skills/recall/` (Claude Code loads plugin folders saved there as
-*skills-directory plugins*; honours `CLAUDE_CONFIG_DIR`):
-
-| File | Purpose |
-|---|---|
-| `.claude-plugin/plugin.json` | plugin manifest |
-| `.mcp.json` | the `recall` MCP server |
-| `hooks/hooks.json` | `SessionStart`, `UserPromptSubmit`, `Stop` → `recall hook … --agent claude-code` |
-| `commands/*.md` | `/recall:remember`, `/recall:search`, `/recall:forget`, `/recall:show`, `/recall:auto`, `/recall:check` |
-
-**Or install from GitHub** (this repo is a plugin marketplace; `recall` must be on your PATH):
+**From GitHub** (send these as two separate prompts; in the desktop app's Code tab you can also use
+**+ → Plugins → Add plugin**):
 
 ```text
 /plugin marketplace add unseenanomaly/recall
 /plugin install recall@recall
 ```
 
-**MCP only, by hand:** `claude mcp add --scope user recall -- recall mcp`
+**Or:** `recall install claude-code` saves the same plugin to `~/.claude/skills/recall/`.
+
+The plugin registers the `recall` MCP server (`.mcp.json`), three hooks (`SessionStart`,
+`UserPromptSubmit`, `Stop` in `hooks/claude-codex.json`) and seven skills: `/recall:recall` plus
+`/recall:recall-remember`, `-search`, `-forget`, `-show`, `-auto`, `-check`.
 
 **Check:** `/plugin` lists `recall`, `/mcp` shows the server, `/hooks` shows three Recall hooks.
 </details>
 
 <details>
-<summary><b>OpenAI Codex CLI</b>: MCP, hooks and the <code>$recall</code> skill</summary>
+<summary><b>OpenAI Codex</b> (CLI and desktop app): MCP, hooks and <code>$recall-*</code> skills</summary>
+
+**From GitHub:**
 
 ```bash
-recall install codex
+codex plugin marketplace add unseenanomaly/recall
+codex plugin add recall@recall
 ```
 
-| Where | What |
-|---|---|
-| `~/.codex/config.toml` | a fenced `[mcp_servers.recall]` block |
-| `~/.codex/hooks.json` | `SessionStart`, `UserPromptSubmit`, `Stop` hooks (merged with yours) |
-| `~/.agents/skills/recall/SKILL.md` | the skill: `$recall remember …`, or pick it from `/skills` |
+Then run `codex`, open `/hooks`, review and **trust** the three Recall hooks, and start a new thread.
+The desktop app picks the plugin up after a restart. Skills are invoked with `$`: `$recall-remember`,
+`$recall-show`… (or pick them from `/skills`).
 
-Honours `CODEX_HOME`. **One-time step:** Codex asks you to trust new hooks; run `/hooks` in Codex and
-trust the three Recall hooks. If your Codex is old enough that hooks are still behind a feature flag,
-also add `[features] codex_hooks = true` to `config.toml`.
-
-**MCP only, by hand:** `codex mcp add recall -- recall mcp`
-
-**Check:** `/mcp` lists `recall`; `/hooks` shows the hooks; `$recall show` prints your memory.
+**Or:** `recall install codex` adds a fenced `[mcp_servers.recall]` block to `~/.codex/config.toml`,
+the hooks to `~/.codex/hooks.json` and the skills to `~/.agents/skills/` (honours `CODEX_HOME`).
+On Codex versions where hooks are still behind a flag, also add `[features] codex_hooks = true`.
 </details>
 
 <details>
-<summary><b>Gemini CLI</b>: extension with MCP, hooks, context and <code>/recall:*</code> commands</summary>
+<summary><b>GitHub Copilot CLI</b>: MCP, hooks and <code>/recall:recall-*</code> skills</summary>
+
+**From GitHub:**
 
 ```bash
-recall install gemini-cli
+copilot plugin marketplace add unseenanomaly/recall
+copilot plugin install recall@recall
 ```
 
-Writes an extension to `~/.gemini/extensions/recall/`:
+(Inside an interactive session: `/plugin marketplace add …` and `/plugin install …`.) Copilot
+namespaces plugin commands by plugin name: `/recall:recall-remember`, `/recall:recall-show`…
+The hooks (`sessionStart`, `userPromptSubmitted`, `agentStop`) skip themselves quietly if `recall`
+isn't on your PATH. If `/mcp` doesn't list `recall` afterwards, add it with `/mcp add` (command
+`recall`, argument `mcp`).
 
-| File | Purpose |
-|---|---|
-| `gemini-extension.json` | manifest + the `recall` MCP server |
-| `GEMINI.md` | short instructions loaded as context |
-| `hooks/hooks.json` | `SessionStart`, `BeforeAgent`, `AfterAgent` hooks |
-| `commands/recall/*.toml` | `/recall:remember`, `/recall:search`, `/recall:forget`, `/recall:show`, `/recall:auto`, `/recall:check` |
-
-**From a clone instead:** `gemini extensions link ./integrations/gemini-cli`
-
-**MCP only, by hand:** `gemini mcp add -s user recall recall mcp`
-
-**Check:** `gemini extensions list`, then `/mcp` and `/hooks` inside Gemini CLI. Older Gemini CLI
-versions need hooks switched on in `~/.gemini/settings.json`.
+**Or:** `recall install copilot` writes `~/.copilot/mcp-config.json`, `~/.copilot/hooks/recall.json`
+and `~/.copilot/skills/` (honours `COPILOT_HOME`). Those personal skills aren't slash commands, so
+just ask: *"recall, remember that I use pnpm"*.
 </details>
 
 <details>
-<summary><b>Gemini Code Assist</b> (VS Code / JetBrains agent mode): MCP and instructions</summary>
+<summary><b>Gemini CLI</b>: MCP, context and <code>/recall-*</code> commands</summary>
+
+**From GitHub:**
 
 ```bash
-recall install gemini
+gemini extensions install https://github.com/unseenanomaly/recall
 ```
 
-| Where | What |
-|---|---|
-| `~/.gemini/settings.json` | `mcpServers.recall` |
-| `~/.gemini/GEMINI.md` | a fenced instructions block |
+Loads `AGENTS.md` as always-on context, registers the `recall` MCP server, and adds `/recall-remember`,
+`/recall-search`, `/recall-forget`, `/recall-show`, `/recall-auto`, `/recall-check`.
 
-Agent mode has no hooks or custom commands, so just talk to it: *"remember that I'm vegetarian"*,
-*"what do you remember about my setup?"*, *"turn Recall's auto-yes on"*. Reload the IDE window after installing.
+**For automatic hooks too:** `recall install gemini-cli` installs the extension to
+`~/.gemini/extensions/recall/` *with* `SessionStart` / `BeforeAgent` / `AfterAgent` hooks. (The GitHub
+extension leaves them out on purpose: Gemini auto-loads `hooks/hooks.json`, and this repo's hook
+files are written for Claude Code, Codex and Copilot.) Uninstall the GitHub copy first so you
+don't have two.
+
+**Check:** `gemini extensions list`, then `/mcp` (and `/hooks`) inside Gemini CLI.
 </details>
 
 <details>
-<summary><b>Cursor</b> (editor agent and <code>cursor-agent</code> CLI): MCP, hooks, commands, skill</summary>
+<summary><b>Antigravity CLI</b> (<code>agy</code>): MCP, context and <code>/recall-*</code> skills</summary>
+
+**From GitHub:**
 
 ```bash
-recall install cursor
+agy plugin install https://github.com/unseenanomaly/recall
 ```
 
-| Where | What |
-|---|---|
-| `~/.cursor/mcp.json` | `mcpServers.recall` (the editor and the CLI share it) |
-| `~/.cursor/hooks.json` | `sessionStart`, `beforeSubmitPrompt`, `afterAgentResponse`, `stop` |
-| `~/.cursor/commands/recall-*.md` | `/recall-remember`, `/recall-search`, `/recall-forget`, `/recall-show`, `/recall-auto`, `/recall-check` |
-| `~/.cursor/skills/recall/SKILL.md` | the skill |
+Antigravity reuses the Gemini extension manifest. One difference: it turns the commands into skills,
+so you type them as a message (`/recall-remember I moved to Berlin`) instead of picking them from a
+slash menu.
 
-Cursor's `beforeSubmitPrompt` hook can't add context, so Recall delivers *"has that changed?"* questions
-and contradiction notes through the `stop` hook's follow-up message: the agent takes one extra turn
-to ask you.
-
-**Check:** Settings → MCP shows `recall`; Settings → Hooks lists the four hooks; type `/recall-show`.
+**Or:** `recall install antigravity` writes a plugin to `~/.gemini/config/plugins/recall/` that also has
+a `Stop` hook to check replies for contradictions.
 </details>
 
 <details>
-<summary><b>GitHub Copilot CLI</b>: MCP, hooks, skill</summary>
+<summary><b>Devin CLI</b>: MCP and <code>/recall:recall-*</code> skills</summary>
+
+**From GitHub:**
 
 ```bash
-recall install copilot
+devin plugins install unseenanomaly/recall
 ```
 
-| Where | What |
-|---|---|
-| `~/.copilot/mcp-config.json` | `mcpServers.recall` (`type: local`, all tools) |
-| `~/.copilot/hooks/recall.json` | `sessionStart`, `userPromptSubmitted`, `agentStop` (bash + PowerShell) |
-| `~/.copilot/skills/recall/SKILL.md` | the skill |
+Skills arrive as `/recall:recall-remember`, `/recall:recall-show`…, and the MCP server comes from
+`.mcp.json`.
 
-Honours `COPILOT_HOME`. The CLI drops `userPromptSubmitted` output, so questions arrive through
-`agentStop` (Copilot takes one more turn to ask). Use it by asking: *"recall, remember that I use pnpm"*.
-
-**MCP only, by hand:** run `/mcp add` inside `copilot`.
-
-**Check:** `/mcp` shows `recall`; `/skills` lists `recall`.
+**For automatic hooks too:** `recall install devin` writes `~/.config/devin/mcp_config.json`, the
+`SessionStart` / `UserPromptSubmit` / `Stop` hooks in `~/.config/devin/config.json`, and the skills
+(`/recall-remember`…) to `~/.config/devin/skills/` (`%APPDATA%\devin\` on Windows).
 </details>
 
 <details>
-<summary><b>Pi</b>: extension that runs every turn, plus <code>/recall-*</code> commands</summary>
+<summary><b>Grok Build</b>: MCP, hooks and <code>/recall-*</code> skills</summary>
+
+**From GitHub:**
 
 ```bash
-recall install pi
+grok plugin install unseenanomaly/recall --trust
 ```
 
-Writes `~/.pi/agent/extensions/recall.ts` (honours `PI_CODING_AGENT_DIR`). Pi deliberately has no
-MCP, so the extension does everything:
+Plugins start disabled: enable it in `/plugins` (Space on `recall`) or in `~/.grok/config.toml`:
 
-- `before_agent_start`: adds what Recall remembers (and any question) to the system prompt
-- `agent_end`: checks the reply for contradictions and raises them on the next turn
-- commands that run instantly, without the model: `/recall-remember`, `/recall-search`,
-  `/recall-forget`, `/recall-show`, `/recall-auto`, `/recall-answer`, `/recall-check`
+```toml
+[plugins]
+enabled = ["recall"]
+```
 
-**From a clone instead:** `pi --extension ./integrations/pi/recall.ts`
+Start a new session (or reload plugins). Skills show as `/recall-remember`, `/recall-show`…;
+verify with `grok inspect`.
 
-**Check:** restart pi, then `/recall-show`.
+**Or:** `recall install grok` writes a `[mcp_servers.recall]` block to `~/.grok/config.toml`,
+`~/.grok/hooks/recall.json`, and the skills to `~/.grok/skills/` (honours `GROK_HOME`).
 </details>
 
 <details>
-<summary><b>OpenCode</b>: MCP, plugin, commands, skill</summary>
+<summary><b>Hermes Agent</b>: plugin that runs every turn, commands, skills</summary>
+
+**From GitHub:**
 
 ```bash
-recall install opencode
+hermes plugins install unseenanomaly/recall --enable
 ```
 
-| Where | What |
-|---|---|
-| `~/.config/opencode/opencode.json` | `mcp.recall` (`type: local`) |
-| `~/.config/opencode/plugins/recall.js` | memory on every message (`chat.message` + system prompt), contradiction check on `session.idle` |
-| `~/.config/opencode/commands/recall-*.md` | `/recall-remember`, `/recall-search`, `/recall-forget`, `/recall-show`, `/recall-auto`, `/recall-check` |
-| `~/.config/opencode/skills/recall/SKILL.md` | the skill |
+Restart Hermes afterwards. The plugin adds what Recall remembers before each turn (`pre_llm_call`),
+checks replies (`post_llm_call`), registers the skills as `recall:<skill>`, and adds commands that run
+instantly: `/recall-remember`, `/recall-search`, `/recall-forget`, `/recall-show`, `/recall-auto`,
+`/recall-answer`. Installed this way it doesn't even need step 1: if `recall` isn't on your PATH it
+runs the copy bundled in the plugin.
 
-If your config is `opencode.jsonc` with comments, Recall prints the `mcp` snippet for you to paste
-instead of rewriting the file.
-
-**Check:** `opencode mcp list` shows `recall`; type `/recall-show`.
-</details>
-
-<details>
-<summary><b>Antigravity CLI</b> (<code>agy</code>): plugin with MCP, stop hook, skill</summary>
-
-```bash
-recall install antigravity
-```
-
-Writes a plugin to `~/.gemini/config/plugins/recall/` with `plugin.json`, `mcp_config.json`
-(the `recall` server), `hooks.json` (a `Stop` hook that checks replies) and `skills/recall/SKILL.md`
-(skills surface as slash commands: `/recall remember …`).
-
-Antigravity's hooks don't see your prompt text, so memory comes in through the MCP tools and the
-skill rather than per-prompt injection. If `agy plugin list` doesn't show it, run
-`agy plugin install ~/.gemini/config/plugins/recall`.
-</details>
-
-<details>
-<summary><b>Hermes Agent</b>: plugin that runs every turn, commands, skill</summary>
-
-```bash
-recall install hermes
-```
-
-| Where | What |
-|---|---|
-| `~/.hermes/plugins/recall/` | `plugin.yaml` + `__init__.py`: `pre_llm_call` adds memory, `post_llm_call` checks the reply, and commands `/recall-remember`, `/recall-search`, `/recall-forget`, `/recall-show`, `/recall-auto`, `/recall-answer` |
-| `~/.hermes/skills/recall/SKILL.md` | the skill (`/recall …`) |
-
-Then `hermes plugins enable recall` (the installer runs it for you when `hermes` is on PATH).
-Honours `HERMES_HOME`. **Optional MCP tools:** add this to `~/.hermes/config.yaml` and run `/reload-mcp`:
+**Or:** `recall install hermes` writes the same plugin to `~/.hermes/plugins/recall/` (honours
+`HERMES_HOME`). **Optional MCP tools:** add this to `~/.hermes/config.yaml`, then `/reload-mcp`:
 
 ```yaml
 mcp_servers:
@@ -381,74 +358,107 @@ mcp_servers:
 </details>
 
 <details>
-<summary><b>Swival</b>: MCP, <code>!recall-*</code> commands, skill, instructions</summary>
+<summary><b>Pi</b>: extension that runs every turn, plus <code>/recall-*</code> commands</summary>
+
+**From GitHub:**
 
 ```bash
-recall install swival
+pi install git:github.com/unseenanomaly/recall
+```
+
+Pi deliberately has no MCP, so the extension does everything: before each turn it adds what Recall
+remembers (and any question) to the system prompt, after each turn it checks the reply, and it adds
+commands that run instantly: `/recall-remember`, `/recall-search`, `/recall-forget`, `/recall-show`,
+`/recall-auto`, `/recall-answer`, `/recall-check`.
+
+**Or:** `recall install pi` writes `~/.pi/agent/extensions/recall.ts`; or try it for one session with
+`pi --extension ./integrations/pi/recall.ts` from a clone.
+</details>
+
+<details>
+<summary><b>Swival</b>: <code>$recall-*</code> skills, plus MCP and <code>!recall-*</code> commands</summary>
+
+**From GitHub:** stage the collection in your library, then activate it:
+
+```bash
+swival skills add --global https://github.com/unseenanomaly/recall
+swival skills add --global recall
+```
+
+Use a `$` prefix to activate a skill explicitly: `$recall-remember I moved to Berlin`.
+
+**For the MCP tools and commands:** `recall install swival` adds a `[mcp_servers.recall]` block to
+`~/.config/swival/config.toml`, an instructions block to `~/.config/swival/AGENTS.md`, and
+`!recall-remember`-style commands to `~/.config/swival/commands/` (honours `XDG_CONFIG_HOME`).
+Swival's lifecycle hooks only run at startup and exit, so there are no per-turn hooks.
+</details>
+
+<details>
+<summary><b>OpenCode</b>: plugin with MCP, commands and memory on every message</summary>
+
+```bash
+recall install opencode
+```
+
+Writes `~/.config/opencode/plugins/recall.js`, the `mcp.recall` entry in `opencode.json`, the
+`/recall-*` commands and the skill. If your config is `opencode.jsonc` with comments, Recall prints
+the snippet to paste instead of rewriting the file.
+
+**As a package** (once it's published to npm), add it to `opencode.json`. OpenCode 1 uses
+`{ "plugin": ["recall-memory"] }`; OpenCode 2 uses `{ "plugins": ["recall-memory"] }`. The plugin
+registers the MCP server and the `/recall-*` commands itself. **From a clone:** OpenCode 2 loads
+`.opencode/plugins/` when you open the repo; elsewhere point `plugins` at the absolute path of that
+folder (OpenCode 1: `"plugin": ["/path/to/recall/.opencode/plugins/recall.mjs"]`).
+
+On OpenCode 2 the plugin adds memory and commands; the per-reply contradiction check uses OpenCode 1's
+event hooks, so on 2 ask for `/recall-check` or let the model call the `check` tool.
+</details>
+
+<details>
+<summary><b>Cursor</b> (editor agent and <code>cursor-agent</code> CLI): MCP, hooks, commands</summary>
+
+```bash
+recall install cursor
 ```
 
 | Where | What |
 |---|---|
-| `~/.config/swival/config.toml` | a fenced `[mcp_servers.recall]` block |
-| `~/.config/swival/AGENTS.md` | a fenced instructions block (use Recall each task) |
-| `~/.config/swival/commands/recall-*.md` | `!recall-remember`, `!recall-search`, `!recall-forget`, `!recall-show`, `!recall-auto`, `!recall-check` |
-| `~/.config/swival/skills/recall/SKILL.md` | the skill (`$recall …`) |
+| `~/.cursor/mcp.json` | `mcpServers.recall` (the editor and the CLI share it) |
+| `~/.cursor/hooks.json` | `sessionStart`, `beforeSubmitPrompt`, `afterAgentResponse`, `stop` (merged with yours) |
+| `~/.cursor/commands/recall-*.md` | `/recall-remember`, `/recall-search`, `/recall-forget`, `/recall-show`, `/recall-auto`, `/recall-check` |
+| `~/.cursor/skills/recall/` | the skill |
 
-Swival's lifecycle hooks only run at startup and exit, so it relies on the instructions + MCP
-tools rather than per-turn hooks. Honours `XDG_CONFIG_HOME`.
+Cursor's `beforeSubmitPrompt` hook can't add context, so questions and contradiction notes arrive
+through the `stop` hook's follow-up message: the agent takes one extra turn to ask you. To do it by
+hand instead, copy `integrations/cursor/commands/` and add the MCP server in Settings → MCP.
 </details>
 
 <details>
-<summary><b>OpenClaw</b>: MCP, plugin, skill</summary>
+<summary><b>Gemini Code Assist</b> (VS Code / JetBrains agent mode): MCP and instructions</summary>
+
+```bash
+recall install gemini
+```
+
+Adds `mcpServers.recall` to `~/.gemini/settings.json` and a fenced instructions block to
+`~/.gemini/GEMINI.md`. Agent mode has no hooks or custom commands, so just talk to it:
+*"remember that I'm vegetarian"*, *"what do you remember about my setup?"*. Reload the IDE window
+after installing.
+</details>
+
+<details>
+<summary><b>OpenClaw</b>: MCP, plugin, skills</summary>
 
 ```bash
 recall install openclaw
 ```
 
-| Where | What |
-|---|---|
-| `~/.openclaw/openclaw.json` | `mcp.servers.recall` |
-| `~/.openclaw/extensions/recall/` | plugin: `before_prompt_build` adds memory, `agent_end` checks replies |
-| `~/.openclaw/skills/recall/SKILL.md` | the skill (`/recall …` or `/skill recall …`) |
-
-The installer runs `openclaw plugins enable recall` when `openclaw` is on PATH. For the reply check,
-allow the plugin to read conversations: set `plugins.entries.recall.hooks.allowConversationAccess`
-to `true`. OpenClaw's plugin API is marked experimental upstream; the MCP tools and skill work
-regardless. If `openclaw.json` contains comments, Recall prints the snippet to paste instead.
-</details>
-
-<details>
-<summary><b>Devin CLI</b>: MCP, hooks, skill</summary>
-
-```bash
-recall install devin
-```
-
-| Where | What |
-|---|---|
-| `~/.config/devin/mcp_config.json` | `mcpServers.recall` (`%APPDATA%\devin\` on Windows) |
-| `~/.config/devin/config.json` | `SessionStart`, `UserPromptSubmit`, `Stop` hooks under `hooks` |
-| `~/.config/devin/skills/recall/SKILL.md` | the skill (`/recall …`) |
-
-**MCP only, by hand:** `devin mcp add -s user recall -- recall mcp`
-</details>
-
-<details>
-<summary><b>Grok Build</b>: MCP, hooks, skill</summary>
-
-```bash
-recall install grok
-```
-
-| Where | What |
-|---|---|
-| `~/.grok/config.toml` | a fenced `[mcp_servers.recall]` block |
-| `~/.grok/hooks/recall.json` | `SessionStart`, `UserPromptSubmit`, `Stop` hooks |
-| `~/.grok/skills/recall/SKILL.md` | the skill (`/recall …`) |
-
-Honours `GROK_HOME`. **MCP only, by hand:** add the `[mcp_servers.recall]` table to
-`~/.grok/config.toml` yourself, or use `grok mcp add`. Grok Build also reads Claude Code's and
-Cursor's hook files; if you notice Recall's hooks running twice, keep only one of those installs.
+Adds `mcp.servers.recall` to `~/.openclaw/openclaw.json`, a plugin in `~/.openclaw/extensions/recall/`
+(memory before each prompt, reply checks after each run), and the skills (`/recall-remember`…) to
+`~/.openclaw/skills/`. For the reply check, set `plugins.entries.recall.hooks.allowConversationAccess`
+to `true`. To do it by hand, copy `integrations/openclaw/` to `~/.openclaw/extensions/recall/` and
+`skills/` to `~/.openclaw/skills/`. OpenClaw's plugin API is marked experimental upstream; the MCP
+tools and skills work regardless.
 </details>
 
 <details>
@@ -462,9 +472,8 @@ Point it at the server:
 
 Or call the CLI from your own hooks: `recall hook prompt --agent generic --text "<prompt>"` prints
 `{"context": "..."}` to inject, and `recall hook stop --agent generic --text "<reply>"` prints
-`{"followup": "..."}` when the reply contradicted something. `recall export-integrations <dir>`
-writes every file above to a folder you can copy from; they're also checked in under
-[`integrations/`](integrations/).
+`{"followup": "..."}` when the reply contradicted something. Tools that read `AGENTS.md` pick up this
+repo's instructions when run from a clone.
 </details>
 
 ---
@@ -473,17 +482,19 @@ writes every file above to a folder you can copy from; they're also checked in u
 
 The same six verbs everywhere; only the spelling changes.
 
-| What | Claude Code · Gemini CLI | Cursor · OpenCode · Pi · Hermes | Swival | Skill agents¹ | CLI |
-|---|---|---|---|---|---|
-| Save something | `/recall:remember <fact>` | `/recall-remember <fact>` | `!recall-remember` | `/recall remember <fact>` | `recall add "<fact>"` |
-| What do you know about… | `/recall:search <topic>` | `/recall-search <topic>` | `!recall-search` | `/recall search <topic>` | `recall ask "<topic>"` |
-| Forget something | `/recall:forget <thing>` | `/recall-forget <thing>` | `!recall-forget` | `/recall forget <thing>` | `recall forget "<thing or id>"` |
-| Show everything | `/recall:show` | `/recall-show` | `!recall-show` | `/recall show` | `recall context` |
-| Auto-yes on / off | `/recall:auto on` | `/recall-auto on` | `!recall-auto on` | `/recall auto on` | `recall auto on` |
-| Check the last reply | `/recall:check` | `/recall-check` | `!recall-check` | `/recall check` | `recall check "<text>"` |
+| What | Claude Code · Copilot · Devin plugin | Gemini · Grok · Antigravity · OpenCode · Cursor · Pi · Hermes · OpenClaw | Codex · Swival | CLI |
+|---|---|---|---|---|
+| Save something | `/recall:recall-remember <fact>` | `/recall-remember <fact>` | `$recall-remember <fact>` | `recall add "<fact>"` |
+| What do you know about… | `/recall:recall-search <topic>` | `/recall-search <topic>` | `$recall-search <topic>` | `recall ask "<topic>"` |
+| Forget something | `/recall:recall-forget <thing>` | `/recall-forget <thing>` | `$recall-forget <thing>` | `recall forget "<thing or id>"` |
+| Show everything | `/recall:recall-show` | `/recall-show` | `$recall-show` | `recall context` |
+| Auto-yes on / off | `/recall:recall-auto on` | `/recall-auto on` | `$recall-auto on` | `recall auto on` |
+| Check the last reply | `/recall:recall-check` | `/recall-check` | `$recall-check` | `recall check "<text>"` |
 
-¹ Antigravity, Devin, Grok Build, OpenClaw (`/recall …`), Codex (`$recall …`). In Copilot CLI and
-Gemini Code Assist just ask: *"recall, remember that…"*. Pi and Hermes also have `/recall-answer yes|no`.
+Devin installed with `recall install devin` uses `/recall-remember` (personal skills aren't namespaced);
+Swival installed with `recall install swival` also has `!recall-remember`. Pi and Hermes add
+`/recall-answer yes|no`. In Gemini Code Assist, and Copilot installed with `recall install copilot`,
+just ask: *"recall, remember that…"*. And in any skill-based tool, `/recall remember …` (the main skill) works too.
 
 ---
 
@@ -859,13 +870,19 @@ recall demo
 
 ## Uninstall
 
+Installed from GitHub? Use the tool's own command: `/plugin uninstall recall@recall` (Claude Code),
+`codex plugin remove recall`, `copilot plugin uninstall recall`, `gemini extensions uninstall recall`,
+`agy plugin uninstall recall`, `devin plugins remove recall`, `grok plugin uninstall recall`,
+`hermes plugins remove recall`, `pi uninstall …`, `swival skills delete --global …`.
+Installed with `recall install`?
+
 ```bash
-recall uninstall --all       # every agent; your memory file is kept
+recall uninstall --all       # every tool; your memory file is kept
 recall forget-all --yes      # delete the memory itself
 pipx uninstall recall-memory # remove the program
 ```
 
-Per-tool commands, exactly what each one removes, and how to do it by hand:
+The full table, exactly what each one removes, and how to do it by hand:
 **[docs/UNINSTALL.md](docs/UNINSTALL.md)**.
 
 ## Troubleshooting
@@ -920,10 +937,15 @@ src/recall/
 ├── settings.py       # where memory lives, saved settings
 ├── hooks.py          # `recall hook`: one adapter, every agent's dialect
 ├── mcp.py            # `recall mcp`: zero-dependency MCP server
-├── integrations/     # `recall install`: per-agent plans, templates, shared content
+├── integrations/     # `recall install` plans, plugin templates, shared commands/skills
 ├── clock.py · config.py · demo.py · cli.py
-integrations/         # generated, ready-to-copy files for every agent (+ Claude Code marketplace)
-tests/                # 102 tests, each a short "add → advance time → assert" story
+tests/                # each test a short "add → advance time → assert" story
+scripts/set_repo.py   # point every manifest at your GitHub repo
+
+# generated by `recall export-repo` (the repo root is a plugin for every tool):
+.claude-plugin/  .codex-plugin/  .agents/plugins/  .github/plugin/  .devin-plugin/  .grok-plugin/
+gemini-extension.json  AGENTS.md  plugin.yaml  __init__.py  package.json  plugin.json  .mcp.json
+skills/  commands/  hooks/  .opencode/plugins/  integrations/
 ```
 
 Time is injected everywhere, so you can fast-forward a year in a unit test.
@@ -940,9 +962,11 @@ Recall is a young project. Know what it does and doesn't do:
   keep false alarms rare, which also means some real contradictions slip through.
 - **Default retrieval is lexical.** It cannot link "weekend plans" to "lives in Berlin". Use
   `active_context()` without a query for personalization, or supply `relevance_fn` with embeddings.
-- **Agent integrations follow each tool's documented config as of October 2026.** These tools move fast.
-  Where a tool can't inject context on every prompt (Cursor, Copilot CLI, Antigravity, Swival), Recall
-  falls back to stop-hook follow-ups, MCP tools and instructions. The OpenClaw plugin API is upstream-experimental.
+- **Agent integrations follow each tool's documented plugin and config formats as of October 2026.**
+  These tools move fast. Where a tool can't inject context on every prompt (Cursor, Copilot CLI,
+  Antigravity, Swival), Recall falls back to stop-hook follow-ups, MCP tools and instructions. The
+  GitHub plugin routes for Gemini CLI and Devin carry no hooks (use `recall install` for those), and
+  the OpenClaw plugin API is upstream-experimental.
 - **Scores are heuristics, not truth.** The weights are sensible defaults you should tune, and
   every verdict is explained so you can see when they're wrong.
 - **`JSONStore` is single-file.** A lock serialises writers across processes; fine for personal use

@@ -4,7 +4,7 @@ import os
 
 import pytest
 
-from recall.integrations import AGENTS, export, find, install, make_ctx, status, uninstall
+from recall.integrations import AGENTS, find, install, make_ctx, status, uninstall
 
 LAUNCHER = ["/opt/recall/bin/recall"]
 
@@ -101,21 +101,55 @@ def test_aliases_and_dry_run(tmp_path, home):
     assert not os.path.exists(ctx.home)
 
 
-def test_export_matches_marketplace(tmp_path):
-    files = export(str(tmp_path))
-    assert "claude-code/.claude-plugin/plugin.json" in files
-    assert "gemini-cli/gemini-extension.json" in files
-    hooks = json.load(open(tmp_path / "claude-code" / "hooks" / "hooks.json"))
+REPO = os.path.join(os.path.dirname(__file__), "..")
+
+
+def test_committed_plugin_files_are_up_to_date():
+    """The manifests at the repo root are generated: run `recall export-repo` after changes."""
+    from recall.integrations.repo import read_slug, repo_files
+    files = repo_files(read_slug(os.path.join(REPO, "pyproject.toml")))
+    for rel, fresh in files.items():
+        path = os.path.join(REPO, *rel.split("/"))
+        assert os.path.exists(path), f"{rel} is missing: run `recall export-repo`"
+        assert open(path, encoding="utf-8").read() == fresh, f"{rel} is stale: run `recall export-repo`"
+
+
+def test_manifests_agree_and_point_at_real_files():
+    from recall import __version__
+    from recall.integrations.repo import repo_files
+    files = repo_files()
+    for rel, text in files.items():
+        if rel.endswith(".json"):
+            data = json.loads(text)
+            if isinstance(data.get("version"), str):         # (hooks files carry a schema version 1)
+                assert data["version"] == __version__, rel
+            for key in ("hooks", "skills", "commands", "mcpServers"):
+                ref = data.get(key)
+                if isinstance(ref, str):
+                    target = (ref[2:] if ref.startswith("./") else ref).rstrip("/")
+                    assert any(f == target or f.startswith(target + "/") for f in files), (rel, key, ref)
+    market = json.loads(files[".claude-plugin/marketplace.json"])
+    assert market["plugins"][0]["source"] == "./"
+    assert "YOUR-GITHUB-USER/recall.git" in files[".agents/plugins/marketplace.json"]
+    hooks = json.loads(files["hooks/claude-codex.json"])
     assert hooks["hooks"]["Stop"][0]["hooks"][0]["command"] == "recall hook stop --agent claude-code"
 
 
-def test_committed_integration_files_are_up_to_date(tmp_path):
-    """`integrations/` in the repo is generated: run `recall export-integrations integrations`."""
-    repo = os.path.join(os.path.dirname(__file__), "..", "integrations")
-    files = export(str(tmp_path))
-    for rel in files:
-        fresh = open(tmp_path / rel, encoding="utf-8").read()
-        committed = open(os.path.join(repo, *rel.split("/")), encoding="utf-8").read()
-        assert fresh == committed, f"integrations/{rel} is stale"
-    market = json.load(open(os.path.join(repo, "..", ".claude-plugin", "marketplace.json")))
-    assert market["plugins"][0]["source"] == "./integrations/claude-code"
+def test_skills_are_valid_agent_skills():
+    import re
+    from recall.integrations.content import all_skills
+    for folder, text in all_skills().items():
+        head = text.split("---")[1]
+        name = re.search(r"^name: (.+)$", head, re.M).group(1).strip()
+        desc = re.search(r"^description: (.+)$", head, re.M).group(1).strip()
+        assert name == folder and re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", name) and len(name) <= 64
+        assert 0 < len(desc) <= 1024
+        if desc.startswith('"'):
+            json.loads(desc)                      # quoted descriptions are valid YAML/JSON strings
+
+
+def test_one_version_everywhere():
+    import re
+    from recall import __version__
+    toml = open(os.path.join(REPO, "pyproject.toml"), encoding="utf-8").read()
+    assert re.search(r'^version = "([^"]+)"', toml, re.M).group(1) == __version__

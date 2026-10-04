@@ -48,6 +48,7 @@ jobs:
           node-version: 24
       - name: Syntax-check the generated JS/TS plugins
         run: |
-          node --check integrations/opencode/plugins/recall.js
+          node --check .opencode/plugins/recall.mjs
+          node --check .opencode/plugins/index.js
           cp integrations/pi/recall.ts /tmp/pi.mts && node --experimental-strip-types --check /tmp/pi.mts
           cp integrations/openclaw/index.ts /tmp/oc.mts && node --experimental-strip-types --check /tmp/oc.mts

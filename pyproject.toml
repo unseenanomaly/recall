@@ -20,6 +20,11 @@ classifiers = [
 ]
 dependencies = []
 
+[project.urls]
+Homepage = "https://github.com/unseenanomaly/recall"
+Repository = "https://github.com/unseenanomaly/recall"
+Issues = "https://github.com/unseenanomaly/recall/issues"
+
 [project.optional-dependencies]
 dev = ["pytest>=7"]
 

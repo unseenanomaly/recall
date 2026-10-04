@@ -16,7 +16,7 @@ from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from .. import __version__
 from ._fs import Action, File, Files, JsonEntry, JsonHooks, Manual, Note, Run, TextBlock, Tree
-from .content import COMMANDS, INSTRUCTIONS_BLOCK, SKILL, body
+from .content import COMMANDS, INSTRUCTIONS_BLOCK, SKILL, all_skills, body
 
 DESCRIPTION = ("Long-term memory that ages facts, asks before it overwrites what you said, "
                "and catches contradictions, including the AI's own.")
@@ -72,10 +72,19 @@ def default_launcher() -> List[str]:
     return [os.path.abspath(exe)] if exe else [sys.executable, "-m", "recall"]
 
 
-def template(name: str, launcher: Sequence[str]) -> str:
+def template(name: str, launcher: Sequence[str], **extra: str) -> str:
     # one joinpath() argument at a time: Python 3.9/3.10 accept only one
     text = resources.files("recall.integrations").joinpath("templates").joinpath(name).read_text(encoding="utf-8")
-    return text.replace("__LAUNCHER__", json.dumps(list(launcher)))
+    text = text.replace("__LAUNCHER__", json.dumps(list(launcher)))
+    for key, value in extra.items():
+        text = text.replace(f"__{key}__", value)
+    return text
+
+
+def opencode_commands() -> str:
+    """The /recall-* commands as JSON, for plugins that register commands themselves."""
+    return json.dumps([{"name": f"recall-{c.name}", "description": c.description,
+                        "template": body(c, "$ARGUMENTS")} for c in COMMANDS], indent=2)
 
 
 def _frontmatter(**kv: str) -> str:
@@ -114,14 +123,22 @@ def _claude_hooks(ctx: Ctx, agent: str, timeout: int = 15) -> Dict[str, list]:
 
 
 def _skill_tree(root: str) -> Tree:
+    """Just the main skill, for tools that also get real /recall-* commands."""
     return Tree(root, {"SKILL.md": SKILL}, label="(skill: /recall, $recall)")
+
+
+def _skills(skills_dir: str) -> List[Action]:
+    """The main skill plus one skill per command (/recall-remember ...), for skill-based tools."""
+    return [Tree(os.path.join(skills_dir, name), {"SKILL.md": text},
+                 label="(skills: /recall, /recall-remember ...)" if name == "recall" else "")
+            for name, text in all_skills().items()]
 
 
 # ===================================================================== plans
 def plan_claude_code(ctx: Ctx) -> List[Action]:
     """A Claude Code plugin saved under ~/.claude/skills/recall (a "skills-directory plugin")."""
     root = os.path.join(ctx.dir("CLAUDE_CONFIG_DIR", ".claude"), "skills", "recall")
-    return [Tree(root, claude_plugin_files(ctx), label="(plugin: MCP + hooks + /recall:* commands)")]
+    return [Tree(root, claude_plugin_files(ctx), label="(plugin: MCP + hooks + /recall:recall-* skills)")]
 
 
 def claude_plugin_files(ctx: Ctx) -> Dict[str, str]:
@@ -135,8 +152,8 @@ def claude_plugin_files(ctx: Ctx) -> Dict[str, str]:
             "description": "Recall: inject memory, record personal facts, catch contradictions",
             "hooks": _claude_hooks(ctx, "claude-code")}, indent=2) + "\n",
     }
-    for name, text in markdown_commands("$ARGUMENTS").items():
-        files[f"commands/{name}"] = text
+    for name, text in all_skills().items():          # /recall:recall-remember ..., same as the GitHub plugin
+        files[f"skills/{name}/SKILL.md"] = text
     return files
 
 
@@ -145,7 +162,7 @@ def plan_codex(ctx: Ctx) -> List[Action]:
     return [
         TextBlock(os.path.join(home, "config.toml"), _mcp_toml(ctx), "#", _toml_guard, label="(MCP server)"),
         JsonHooks(os.path.join(home, "hooks.json"), _claude_hooks(ctx, "codex", 15), "--agent codex"),
-        _skill_tree(ctx.path(".agents", "skills", "recall")),
+        *_skills(ctx.path(".agents", "skills")),
         Note("Codex asks you to review new hooks once: open Codex, run /hooks, and trust the three "
              "Recall hooks. (On Codex versions where hooks are still behind a flag, also add "
              "`[features] codex_hooks = true` to config.toml.)"),
@@ -166,16 +183,16 @@ def gemini_extension_files(ctx: Ctx) -> Dict[str, str]:
             "BeforeAgent": h("prompt", "recall-prompt"),
             "AfterAgent": h("stop", "recall-check")}}, indent=2) + "\n",
     }
-    for c in COMMANDS:
+    for c in COMMANDS:                                 # /recall-remember ..., same as the GitHub extension
         prompt = body(c, "{{args}}")
-        files[f"commands/recall/{c.name}.toml"] = (
+        files[f"commands/recall-{c.name}.toml"] = (
             f"description = {json.dumps(c.description)}\nprompt = '''\n{prompt}\n'''\n")
     return files
 
 
 def plan_gemini_cli(ctx: Ctx) -> List[Action]:
     root = ctx.path(".gemini", "extensions", "recall")
-    return [Tree(root, gemini_extension_files(ctx), label="(extension: MCP + hooks + /recall:* commands)"),
+    return [Tree(root, gemini_extension_files(ctx), label="(extension: MCP + hooks + /recall-* commands)"),
             Note("Check it loaded with `gemini extensions list`. If hooks don't fire on an older Gemini CLI, "
                  "enable hooks in ~/.gemini/settings.json (see `/hooks`).")]
 
@@ -219,7 +236,7 @@ def plan_copilot(ctx: Ctx) -> List[Action]:
         JsonEntry(os.path.join(home, "mcp-config.json"), ("mcpServers", "recall"),
                   {"type": "local", **ctx.mcp(), "tools": ["*"]}),
         File(os.path.join(home, "hooks", "recall.json"), json.dumps(hooks, indent=2) + "\n", label="(hooks)"),
-        _skill_tree(os.path.join(home, "skills", "recall")),
+        *_skills(os.path.join(home, "skills")),
     ]
 
 
@@ -243,7 +260,7 @@ def plan_opencode(ctx: Ctx) -> List[Action]:
         JsonEntry(_opencode_config(home), ("mcp", "recall"),
                   {"type": "local", "command": [*ctx.launcher, "mcp"], "enabled": True},
                   seed={"$schema": "https://opencode.ai/config.json"}),
-        File(os.path.join(home, "plugins", "recall.js"), template("opencode.js.tmpl", ctx.launcher),
+        File(os.path.join(home, "plugins", "recall.js"), template("opencode.js.tmpl", ctx.launcher, COMMANDS=opencode_commands()),
              label="(plugin: memory each turn + contradiction check)"),
     ]
     actions.append(Files({os.path.join(home, "commands", n): t for n, t in markdown_commands(
@@ -259,16 +276,25 @@ def plan_antigravity(ctx: Ctx) -> List[Action]:
         "mcp_config.json": json.dumps({"mcpServers": {"recall": ctx.mcp()}}, indent=2) + "\n",
         "hooks.json": json.dumps({"recall": {"Stop": [{"hooks": [
             {"type": "command", "command": ctx.hook("stop", "antigravity"), "timeout": 15}]}]}}, indent=2) + "\n",
-        "skills/recall/SKILL.md": SKILL,
+        **{f"skills/{name}/SKILL.md": text for name, text in all_skills().items()},
     }
     return [Tree(root, files, label="(plugin: MCP + stop hook + /recall skill)"),
             Note("If `agy plugin list` doesn't show it, run `agy plugin install ~/.gemini/config/plugins/recall`.")]
 
 
+HERMES_COMMANDS = ("recall-remember", "recall-search", "recall-forget", "recall-show", "recall-auto",
+                   "recall-answer")
+
+
+def hermes_plugin_yaml() -> str:
+    return (f"name: recall\nversion: {__version__}\ndescription: {json.dumps(DESCRIPTION)}\n"
+            "provides_hooks:\n  - pre_llm_call\n  - post_llm_call\n"
+            "provides_commands:\n" + "".join(f"  - {n}\n" for n in HERMES_COMMANDS))
+
+
 def plan_hermes(ctx: Ctx) -> List[Action]:
     home = ctx.dir("HERMES_HOME", ".hermes")
-    plugin_yaml = (f"name: recall\nversion: {__version__}\ndescription: {json.dumps(DESCRIPTION)}\n"
-                   "provides_hooks:\n  - pre_llm_call\n  - post_llm_call\n")
+    plugin_yaml = hermes_plugin_yaml()
     mcp_yaml = ("mcp_servers:\n  recall:\n"
                 f"    command: {json.dumps(ctx.launcher[0])}\n"
                 f"    args: {json.dumps([*ctx.launcher[1:], 'mcp'])}\n")
@@ -310,7 +336,7 @@ def plan_openclaw(ctx: Ctx) -> List[Action]:
     return [
         JsonEntry(os.path.join(home, "openclaw.json"), ("mcp", "servers", "recall"), ctx.mcp()),
         Tree(os.path.join(home, "extensions", "recall"), plugin, label="(plugin: memory each turn + checks)"),
-        _skill_tree(os.path.join(home, "skills", "recall")),
+        *_skills(os.path.join(home, "skills")),
         Run(["openclaw", "plugins", "enable", "recall"], ["openclaw", "plugins", "disable", "recall"]),
         Note("For the contradiction check, allow the plugin to read replies: set "
              "plugins.entries.recall.hooks.allowConversationAccess to true in ~/.openclaw/openclaw.json."),
@@ -323,7 +349,7 @@ def plan_devin(ctx: Ctx) -> List[Action]:
     return [
         JsonEntry(os.path.join(home, "mcp_config.json"), ("mcpServers", "recall"), ctx.mcp()),
         JsonHooks(os.path.join(home, "config.json"), _claude_hooks(ctx, "devin"), "--agent devin"),
-        _skill_tree(os.path.join(home, "skills", "recall")),
+        *_skills(os.path.join(home, "skills")),
     ]
 
 
@@ -333,7 +359,7 @@ def plan_grok(ctx: Ctx) -> List[Action]:
         TextBlock(os.path.join(home, "config.toml"), _mcp_toml(ctx), "#", _toml_guard, label="(MCP server)"),
         File(os.path.join(home, "hooks", "recall.json"),
              json.dumps({"hooks": _claude_hooks(ctx, "grok")}, indent=2) + "\n", label="(hooks)"),
-        _skill_tree(os.path.join(home, "skills", "recall")),
+        *_skills(os.path.join(home, "skills")),
     ]
 
 
@@ -352,33 +378,33 @@ class Agent:
 
 AGENTS: List[Agent] = [
     Agent("claude-code", "Claude Code", plan_claude_code, ("claude",), (".claude",),
-          ("plugin", "mcp", "hooks", "commands"), "/recall:remember", ("claude",)),
+          ("plugin", "mcp", "hooks", "skills"), "/recall:recall-remember", ("claude",)),
     Agent("codex", "OpenAI Codex CLI", plan_codex, ("codex",), (".codex",),
-          ("mcp", "hooks", "skill"), "$recall remember", ("openai-codex",)),
+          ("mcp", "hooks", "skills"), "$recall-remember", ("openai-codex",)),
     Agent("gemini-cli", "Gemini CLI", plan_gemini_cli, ("gemini",), (".gemini",),
-          ("extension", "mcp", "hooks", "commands", "instructions"), "/recall:remember"),
+          ("extension", "mcp", "hooks", "commands", "instructions"), "/recall-remember"),
     Agent("gemini", "Gemini Code Assist (IDE agent mode)", plan_gemini, (), (".gemini",),
           ("mcp", "instructions"), "ask in chat", ("gemini-code-assist",)),
     Agent("cursor", "Cursor (IDE + cursor-agent CLI)", plan_cursor, ("cursor", "cursor-agent"), (".cursor",),
           ("mcp", "hooks", "commands", "skill"), "/recall-remember"),
     Agent("copilot", "GitHub Copilot CLI", plan_copilot, ("copilot",), (".copilot",),
-          ("mcp", "hooks", "skill"), 'ask: "recall, remember ..."', ("copilot-cli", "github-copilot")),
+          ("mcp", "hooks", "skills"), 'ask: "recall, remember ..."', ("copilot-cli", "github-copilot")),
     Agent("pi", "Pi coding agent", plan_pi, ("pi",), (".pi",),
           ("extension", "hooks", "commands"), "/recall-remember", ("pi-agent",)),
     Agent("opencode", "OpenCode", plan_opencode, ("opencode",), (".config/opencode",),
           ("mcp", "plugin", "commands", "skill"), "/recall-remember"),
     Agent("antigravity", "Antigravity CLI", plan_antigravity, ("agy", "antigravity"), (".gemini/antigravity-cli",),
-          ("plugin", "mcp", "hooks", "skill"), "/recall remember", ("agy", "antigravity-cli")),
+          ("plugin", "mcp", "hooks", "skills"), "/recall-remember", ("agy", "antigravity-cli")),
     Agent("hermes", "Hermes Agent", plan_hermes, ("hermes",), (".hermes",),
           ("plugin", "hooks", "commands", "skill"), "/recall-remember", ("hermes-agent",)),
     Agent("swival", "Swival", plan_swival, ("swival",), (".config/swival",),
           ("mcp", "commands", "skill", "instructions"), "!recall-remember"),
     Agent("openclaw", "OpenClaw", plan_openclaw, ("openclaw",), (".openclaw",),
-          ("mcp", "plugin", "hooks", "skill"), "/recall remember  (or /skill recall)"),
+          ("mcp", "plugin", "hooks", "skills"), "/recall-remember"),
     Agent("devin", "Devin CLI", plan_devin, ("devin",), (".config/devin",),
-          ("mcp", "hooks", "skill"), "/recall remember", ("devin-cli",)),
+          ("mcp", "hooks", "skills"), "/recall-remember", ("devin-cli",)),
     Agent("grok", "Grok Build", plan_grok, ("grok", "grok-build"), (".grok",),
-          ("mcp", "hooks", "skill"), "/recall remember", ("grok-build",)),
+          ("mcp", "hooks", "skills"), "/recall-remember", ("grok-build",)),
 ]
 BY_ID: Dict[str, Agent] = {a.id: a for a in AGENTS}
 for _a in AGENTS:

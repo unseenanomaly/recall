@@ -4,7 +4,7 @@ Thanks for helping! Recall is small on purpose: zero runtime dependencies, one
 idea per module.
 
 ```bash
-git clone https://github.com/<you>/recall && cd recall
+git clone https://github.com/unseenanomaly/recall && cd recall
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
 pytest
@@ -30,20 +30,44 @@ python -m recall demo
   `recall uninstall` simply undoes the same list, so never write a file outside an action.
 - Hook payloads differ per agent; add a `Dialect` in `src/recall/hooks.py` and a test in
   `tests/test_hooks.py` that feeds a realistic payload.
-- `integrations/` at the repo root is **generated**. After changing commands, the skill, hooks or
-  plugin templates, run:
+- **The plugin manifests are generated.** The repo root is a plugin for every tool
+  (`.claude-plugin/`, `.codex-plugin/`, `.agents/plugins/`, `.github/plugin/`, `.devin-plugin/`,
+  `.grok-plugin/`, `gemini-extension.json`, `plugin.yaml` + `__init__.py`, `package.json`, `skills/`,
+  `commands/`, `hooks/`, `.mcp.json`, `.opencode/plugins/`, `integrations/`). After changing commands,
+  skills, hooks or plugin templates, regenerate them:
 
   ```bash
-  recall export-integrations integrations
+  recall export-repo
   ```
 
-  (`tests/test_integrations.py` fails if you forget.)
+  (`tests/test_integrations.py` fails if you forget.) Edit `src/recall/integrations/`, never the
+  generated files.
 - Try an install without touching your real config:
 
   ```bash
   RECALL_HOME=/tmp/rh recall install --all --home /tmp/fakehome
   recall uninstall --all --home /tmp/fakehome
   ```
+
+## Releasing
+
+1. **Point the repo at your GitHub account** (once, or after renaming):
+
+   ```bash
+   python scripts/set_repo.py your-name/recall
+   ```
+
+   This fills in every `unseenanomaly/recall` placeholder (README, docs, `pyproject.toml`) and
+   regenerates the manifests, including the Codex marketplace, which needs the repo's git URL.
+2. **Bump the version** in `pyproject.toml` and `src/recall/__init__.py`, run `recall export-repo`
+   so every manifest carries it, run `pytest`, then tag the release (`git tag v0.2.0 && git push --tags`).
+   Plugin hosts that pin by version (Claude Code, Codex, Gemini) offer the update to users from there.
+3. **Optional registries:**
+   - PyPI, so `pipx install recall-memory` works: `python -m build && twine upload dist/*`
+     (check the name is free on pypi.org first).
+   - npm, so OpenCode users can add `"recall-memory"`: `npm publish` (the `package.json` is ready;
+     rename it if the name is taken).
+   - ClawHub, for `clawhub install`: publish the folders under `skills/`.
 
 ## Good first issues
 
