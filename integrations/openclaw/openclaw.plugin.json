@@ -1,0 +1,12 @@
+{
+  "id": "recall",
+  "name": "Recall",
+  "description": "Long-term memory that ages facts, asks before it overwrites what you said, and catches contradictions, including the AI's own.",
+  "activation": {
+    "onStartup": true
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false
+  }
+}

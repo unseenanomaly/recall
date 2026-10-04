@@ -1,0 +1,114 @@
+
+  RECALL  ·  AI memory that forgets on purpose
+
+━━ Week 1: learning about the user ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 2025-01-06  + “I live in Toronto and work at Shopify”
+              ├ claim    user.lives_in = Toronto
+              ├ claim    user.works_at = Shopify
+ 2025-01-06  + “I love hiking and coffee”
+              ├ claim    user.likes = hiking
+              ├ claim    user.likes = coffee
+ 2025-01-06  + “I'm vegetarian”
+              ├ 📌 pinned: exempt from forgetting
+              ├ claim    user.diet = vegetarian
+ 2025-01-06  + “My favorite editor is vim”
+              ├ claim    user.favorite_editor = vim
+ 2025-01-06  + “Remind me to buy milk tomorrow”
+ 2025-01-06  + “Team offsite is next Thursday”
+
+━━ Day 3: retrieval is rehearsal ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 2025-01-09  ? where does the user live  →  Lives in Toronto
+ 2025-01-09  ? what editor do they use  →  My favorite editor is vim
+
+━━ Day 45: time passes, ephemera dissolve ━━━━━━━━━━━━━━━━━━━━━━━━
+ 2025-02-20  ⏳ sweep: 8 memories | 0 faded, 2 forgotten, 0 expired, 0 disputes settled
+
+━━ Day 120: the user changes their mind ━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 2025-05-06  + “I moved to Berlin”
+              ├ claim    user.lives_in = Berlin
+              └ ⟳ SUPERSEDES old belief «Lives in Toronto»
+                new memory won on recency + explicit correction (1.10 vs 0.62)
+ 2025-05-06  + “Actually, I don't like hiking anymore”
+              ├ claim    user.likes = not hiking
+              └ ⟳ SUPERSEDES old belief «Likes hiking»
+                new memory won on recency + explicit correction (1.10 vs 0.55)
+ 2025-05-06  + “My favorite editor is VS Code”
+              ├ claim    user.favorite_editor = VS Code
+              └ ? ASKS FIRST You said before that your favorite editor is vim (2025-01-06). Has that changed?
+ 2025-05-06  ↳ user: “yes”  →  ✓ confirmed «My favorite editor is vim» replaced
+              (with confirm=auto, `recall auto on`, it would have been accepted without asking)
+ 2025-05-06  ? where does the user live  →  I moved to Berlin
+
+━━ Day 130: an untrustworthy source tries to rewrite history ━━━━━
+ 2025-05-16  + “I live in Paris” via web
+              ├ claim    user.lives_in = Paris
+              └ 🛡 REJECTED, old belief holds «I moved to Berlin»
+                old memory won on explicit correction + source trust (0.64 vs 0.99)
+ 2025-05-16  ? where does the user live  →  I moved to Berlin
+
+━━ Day 140: two equally credible sources disagree ━━━━━━━━━━━━━━━━
+ 2025-05-26  + “The standup is at 9am” via calendar
+              ├ claim    world.standup = at 9am
+ 2025-05-26  + “The standup is at 10am” via slack
+              ├ claim    world.standup = at 10am
+              └ ⚠ DISPUTED «The standup is at 9am»
+                too close to call (0.78 vs 0.78); needs more evidence
+
+━━ Day 150: the assistant contradicts itself ━━━━━━━━━━━━━━━━━━━━━
+ 2025-06-05  ✦ assistant: “The staging database port is 5432.”
+              └ consistent; its claims are kept to check later replies against
+ 2025-06-05  ✦ assistant: “The staging database port is 6543.”
+              └ ⚠ SELF-CONTRADICTION
+                Earlier (2025-06-05) you said "The staging database port is 5432", but just now you said "The staging database port is 6543". Those contradict each other.
+ 2025-06-05  ✦ assistant: “You live in Toronto, so the 9am standup is early for you.”
+              └ ⚠ CONTRADICTS THE USER
+                You said "You live in Toronto, so the 9am standup is early for you", but on 2025-05-06 the user told you: "I moved to Berlin".
+ 2025-06-05  ✦ assistant: “Correction: the staging database port is 5432.”
+              └ ✓ it said which one was right, so the dispute is settled
+
+   What the LLM is told right now:
+   ## What I currently know about the user
+   - I'm vegetarian  [as of 2025-01-06]
+   - I moved to Berlin  [as of 2025-05-06]
+   - My favorite editor is VS Code  [as of 2025-05-06]
+   - Actually, I don't like hiking anymore  [as of 2025-05-06]
+   - The standup is at 9am  [as of 2025-05-26]  (unverified: conflicting evidence)
+   - The standup is at 10am  [as of 2025-05-26]  (unverified: conflicting evidence)
+   - Works at Shopify  [as of 2025-01-06]
+   - Likes coffee  [as of 2025-01-06]
+
+━━ Day 510: a year of silence ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 2026-05-31  ⏳ sweep: 16 memories | 4 faded, 1 forgotten, 4 expired, 0 disputes settled
+
+   status      retention       memory
+   ○ forgotten  ··············    —    Lives in Toronto
+   ◐ dormant    ███░░░░░░░░░░░  21%    Works at Shopify
+   ○ forgotten  ··············    —    Likes hiking
+   ◐ dormant    █░░░░░░░░░░░░░   9%    Likes coffee
+   ● active     ██████████████ 100% 📌 I'm vegetarian
+   ○ forgotten  ··············    —    My favorite editor is vim
+   ○ forgotten  ··············    —    Remind me to buy milk tomorrow
+   ○ forgotten  ··············    —    Team offsite is next Thursday
+   ● active     ████████████░░  86%    I moved to Berlin
+   ◐ dormant    ██░░░░░░░░░░░░  16%    Actually, I don't like hiking anymore
+   ◐ dormant    ██░░░░░░░░░░░░  16%    My favorite editor is VS Code
+   ○ forgotten  ··············    —    I live in Paris
+   ⚠ disputed   ████░░░░░░░░░░  32%    The standup is at 9am
+   ⚠ disputed   ████░░░░░░░░░░  32%    The standup is at 10am
+
+ 2026-05-31  ? where does the user live  →  I moved to Berlin
+ 2026-05-31  ? does the user like hiking  →  Actually, I don't like hiking anymore
+
+   Why does Recall believe the user lives in Berlin?
+   m_132fa3c2  "I moved to Berlin"
+     status=active  kind=identity  retention=1.00  half-life=2759d  recalled=3x
+     confidence=0.80  source=user (trust 1.00)
+     claim: user.lives_in = Berlin
+     history:
+       2025-05-06  created      identity, half-life 912d, source=user (trust 1.00)
+       2025-05-06  supersedes   m_d762faef: user.lives_in can only have one value: 'Toronto' vs 'Berlin'
+       2025-05-06  reinforced   recalled for "where does the user live"; half-life now 1278d
+       2025-05-16  defended     held against m_b0466ed5 (old memory won on explicit correction + source trust (0.64 vs 0.99))
+       2025-05-16  reinforced   recalled for "where does the user live"; half-life now 1795d
+       2026-05-31  reinforced   recalled for "where does the user live"; half-life now 2759d
+

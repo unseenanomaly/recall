@@ -1,0 +1,18 @@
+{
+  "name": "recall",
+  "owner": { "name": "Recall contributors" },
+  "metadata": {
+    "description": "Recall: AI memory that forgets on purpose, asks before it overwrites what you said, and catches contradictions.",
+    "version": "0.2.0"
+  },
+  "plugins": [
+    {
+      "name": "recall",
+      "source": "./integrations/claude-code",
+      "description": "Long-term memory that ages facts, asks before it overwrites what you said, and catches contradictions, including the AI's own. Needs the `recall` CLI on PATH (pipx install recall-memory).",
+      "version": "0.2.0",
+      "category": "productivity",
+      "keywords": ["memory", "contradictions", "mcp", "hooks"]
+    }
+  ]
+}

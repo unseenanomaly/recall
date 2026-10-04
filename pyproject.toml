@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "recall-memory"
+version = "0.2.0"
+description = "AI memory that forgets on purpose: ages facts, asks before overwriting what you said, catches contradictions (including the AI's own), and plugs into 14 coding agents."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+keywords = ["ai", "memory", "llm", "agents", "forgetting", "contradiction-detection", "rag", "knowledge-management", "mcp", "claude-code", "codex", "gemini-cli", "cursor", "copilot", "opencode"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Typing :: Typed",
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[project.scripts]
+recall = "recall.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+recall = ["py.typed", "integrations/templates/*.tmpl"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

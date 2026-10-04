@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="Recall logo">
+  <title>Recall</title>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#22D3EE"/>
+    </linearGradient>
+    <radialGradient id="core" cx="40%" cy="35%" r="75%">
+      <stop offset="0" stop-color="#E9D5FF"/>
+      <stop offset="0.45" stop-color="#A78BFA"/>
+      <stop offset="1" stop-color="#22D3EE"/>
+    </radialGradient>
+    <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#8B5CF6" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#8B5CF6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- soft glow behind the core -->
+  <circle cx="128" cy="128" r="70" fill="url(#halo)"/>
+
+  <!-- ring 3: almost forgotten, dissolving into dots -->
+  <circle cx="128" cy="128" r="104" fill="none" stroke="url(#g)" stroke-width="6"
+          stroke-linecap="round" stroke-dasharray="0.1 17" opacity="0.5"/>
+  <!-- ring 2: fading, broken -->
+  <circle cx="128" cy="128" r="80" fill="none" stroke="url(#g)" stroke-width="7"
+          stroke-linecap="round" stroke-dasharray="44 12 14 12 4 12" stroke-dashoffset="20" opacity="0.72"/>
+  <!-- ring 1: strong, recent memory -->
+  <circle cx="128" cy="128" r="56" fill="none" stroke="url(#g)" stroke-width="8"
+          stroke-linecap="round" stroke-dasharray="300 52" stroke-dashoffset="-30"/>
+
+  <!-- the core: what stays active -->
+  <circle cx="128" cy="128" r="26" fill="url(#core)"/>
+  <circle cx="119" cy="119" r="7" fill="#fff" opacity="0.55"/>
+
+  <!-- particles drifting away: forgotten information -->
+  <circle cx="214" cy="62" r="5"   fill="#22D3EE" opacity="0.65"/>
+  <circle cx="230" cy="46" r="3.4" fill="#22D3EE" opacity="0.42"/>
+  <circle cx="241" cy="34" r="2.2" fill="#22D3EE" opacity="0.25"/>
+  <circle cx="247" cy="24" r="1.4" fill="#22D3EE" opacity="0.14"/>
+</svg>

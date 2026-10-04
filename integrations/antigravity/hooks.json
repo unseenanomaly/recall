@@ -1,0 +1,15 @@
+{
+  "recall": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "recall hook stop --agent antigravity",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "description": "Recall: inject memory, record personal facts, catch contradictions",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "recall hook session-start --agent claude-code",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "recall hook prompt --agent claude-code",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "recall hook stop --agent claude-code",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

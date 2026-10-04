@@ -1,0 +1,8 @@
+---
+description: "Show everything Recall currently believes"
+---
+Show the user what Recall currently believes about them.
+
+Call the `context` tool of the `recall` MCP server with no query (or run `recall context`).
+Present it as a short list, followed by any open questions and disputed items. Don't add
+anything that isn't in the result.

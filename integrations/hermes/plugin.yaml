@@ -1,0 +1,6 @@
+name: recall
+version: 0.2.0
+description: "Long-term memory that ages facts, asks before it overwrites what you said, and catches contradictions, including the AI's own."
+provides_hooks:
+  - pre_llm_call
+  - post_llm_call

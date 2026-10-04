@@ -1,0 +1,106 @@
+/**
+ * Recall for Pi: long-term memory that ages facts, asks before it overwrites what
+ * you said, and catches contradictions (including the model's own).
+ *
+ * Installed by `recall install pi`. Remove with `recall uninstall pi`.
+ * Commands: /recall-remember /recall-search /recall-forget /recall-show
+ *           /recall-auto /recall-answer /recall-check
+ */
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+
+const RECALL: string[] = __LAUNCHER__;
+
+function textOf(content: unknown): string {
+	if (typeof content === "string") return content;
+	if (Array.isArray(content)) {
+		return content
+			.filter((c: any) => c && c.type === "text" && typeof c.text === "string")
+			.map((c: any) => c.text)
+			.join("\n");
+	}
+	return "";
+}
+
+function lastAssistantText(messages: any[] = []): string {
+	for (let i = messages.length - 1; i >= 0; i--) {
+		const m = messages[i];
+		if (m && m.role === "assistant") return textOf(m.content);
+	}
+	return "";
+}
+
+export default function recall(pi: ExtensionAPI) {
+	const run = async (args: string[]) => {
+		try {
+			const r = await pi.exec(RECALL[0], [...RECALL.slice(1), ...args]);
+			return { ok: r.code === 0, out: String(r.stdout ?? "").trim() };
+		} catch {
+			return { ok: false, out: "" };
+		}
+	};
+	const hook = async (event: string, text: string): Promise<{ context?: string }> => {
+		const r = await run(["hook", event, "--agent", "generic", "--queue", "--text", text.slice(0, 8000)]);
+		try {
+			return JSON.parse(r.out || "{}");
+		} catch {
+			return {};
+		}
+	};
+
+	let started = false;
+
+	// Before each turn: what Recall remembers, any "has that changed?" question, and heads-ups.
+	pi.on("before_agent_start", async (event) => {
+		const parts: string[] = [];
+		if (!started) {
+			started = true;
+			const s = await hook("session-start", "");
+			if (s.context) parts.push(s.context);
+		}
+		const p = await hook("prompt", event.prompt ?? "");
+		if (p.context) parts.push(p.context);
+		if (parts.length) return { systemPrompt: `${event.systemPrompt}\n\n${parts.join("\n\n")}` };
+	});
+
+	// After each turn: check the reply for contradictions. Findings are raised next turn.
+	pi.on("agent_end", async (event) => {
+		const text = lastAssistantText((event as any).messages);
+		if (text) await hook("stop", text);
+	});
+
+	const commands: Record<string, [string, (args: string) => string[]]> = {
+		"recall-remember": ["Save something to long-term memory", (a) => ["add", a]],
+		"recall-search": ["Ask what Recall remembers about something", (a) => ["ask", a]],
+		"recall-forget": ["Forget a memory (id or description)", (a) => ["forget", a]],
+		"recall-show": ["Show what Recall currently believes", () => ["context"]],
+		"recall-auto": ['Auto-yes for "has that changed?": on | off', (a) => (a.trim() ? ["auto", a.trim()] : ["auto"])],
+		"recall-answer": ["Answer Recall's question: yes | no", (a) => ["answer", a.trim() || "yes"]],
+	};
+	for (const [name, [description, toArgs]] of Object.entries(commands)) {
+		pi.registerCommand(name, {
+			description,
+			handler: async (args, ctx) => {
+				const r = await run(toArgs(String(args ?? "")));
+				ctx.ui.notify(r.out || (r.ok ? "done" : "recall failed: is it installed and on PATH?"), r.ok ? "info" : "error");
+			},
+		});
+	}
+
+	pi.registerCommand("recall-check", {
+		description: "Check the last reply for contradictions",
+		handler: async (_args, ctx) => {
+			let text = "";
+			const entries: any[] = ctx.sessionManager.getEntries();
+			for (let i = entries.length - 1; i >= 0; i--) {
+				const e = entries[i];
+				if (e.type === "message" && e.message?.role === "assistant") {
+					text = textOf(e.message.content);
+					break;
+				}
+			}
+			if (!text) return ctx.ui.notify("no reply to check yet", "info");
+			const r = await run(["check", text]);
+			ctx.ui.notify(r.out || "no contradictions found", r.ok ? "info" : "warning");
+		},
+	});
+}
