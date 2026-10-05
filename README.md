@@ -987,6 +987,11 @@ Recall is a young project. Know what it does and doesn't do:
 PRs welcome. See [CONTRIBUTING.md](CONTRIBUTING.md). The tests are the best documentation:
 `pytest` and `recall demo` are all you need.
 
+## Contributors
+
+- [unseenanomaly](https://github.com/unseenanomaly): creator and maintainer
+- [Claude](https://claude.com/claude-code) (Anthropic): contributor to the code, integrations and docs
+
 ## License
 
 [MIT](LICENSE)
